@@ -1,31 +1,127 @@
-// (fragmento de actualización en el script)
-canvas.addEventListener("touchstart", (e) => {
-  dibujando = true;
-  const rect = canvas.getBoundingClientRect();
-  const touch = e.touches[0];
-  ctx.beginPath();
-  ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-});
+<script>
+    let grabadora;
+    function grabarVozCliente() {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        grabadora = new MediaRecorder(stream);
+        let chunks = [];
+        grabadora.ondataavailable = e => chunks.push(e.data);
+        grabadora.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const audioURL = URL.createObjectURL(blob);
+          const audio = document.getElementById('audioGrabado');
+          audio.src = audioURL;
+          audio.style.display = 'block';
+        };
+        grabadora.start();
+        setTimeout(() => grabadora.stop(), 5000);
+      });
+    }
 
-canvas.addEventListener("touchend", () => {
-  dibujando = false;
-  ctx.beginPath();
-});
+    const canvasFirma = document.getElementById("firmaCliente");
+    const ctxFirma = canvasFirma.getContext("2d");
+    let dibujando = false;
 
-canvas.addEventListener("touchcancel", () => {
-  dibujando = false;
-});
+    canvasFirma.addEventListener("mousedown", () => dibujando = true);
+    canvasFirma.addEventListener("mouseup", () => { dibujando = false; ctxFirma.beginPath(); });
+    canvasFirma.addEventListener("mouseout", () => dibujando = false);
+    canvasFirma.addEventListener("mousemove", function (e) {
+      if (!dibujando) return;
+      const rect = canvasFirma.getBoundingClientRect();
+      ctxFirma.lineWidth = 2;
+      ctxFirma.lineCap = "round";
+      ctxFirma.strokeStyle = "#000";
+      ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctxFirma.stroke();
+      ctxFirma.beginPath();
+      ctxFirma.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
 
-canvas.addEventListener("touchmove", function (e) {
-  if (!dibujando) return;
-  const rect = canvas.getBoundingClientRect();
-  const touch = e.touches[0];
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "#000";
-  ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-  e.preventDefault();
-}, { passive: false });
+    function expandirFirma() {
+      document.body.style.overflow = "hidden";
+      document.getElementById("firmaModal").style.display = "flex";
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      const ctx = canvas.getContext("2d");
+      let dibujando = false;
+
+      canvas.addEventListener("mousedown", () => dibujando = true);
+      canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
+      canvas.addEventListener("mouseout", () => dibujando = false);
+      canvas.addEventListener("mousemove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      });
+
+      canvas.addEventListener("touchstart", (e) => {
+        dibujando = true;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      });
+
+      canvas.addEventListener("touchend", () => {
+        dibujando = false;
+        ctx.beginPath();
+      });
+
+      canvas.addEventListener("touchcancel", () => {
+        dibujando = false;
+      });
+
+      canvas.addEventListener("touchmove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+        ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        e.preventDefault();
+      }, { passive: false });
+    }
+
+    function cerrarFirma() {
+      const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
+      const firma = canvasExpandido.toDataURL();
+      const img = new Image();
+      img.onload = function () {
+        ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+        ctxFirma.drawImage(img, 0, 0, canvasFirma.width, canvasFirma.height);
+      };
+      img.src = firma;
+      document.getElementById("firmaModal").style.display = "none";
+      document.body.style.overflow = "auto";
+    }
+
+    function borrarFirmaExpandida() {
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    async function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const container = document.getElementById("formContainer");
+
+      await html2canvas(container).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.text("Incluye grabación de voz de aceptación del cliente.", 10, pdfHeight + 10);
+        doc.save('recepcion-vehiculo.pdf');
+      });
+    }
+</script>
