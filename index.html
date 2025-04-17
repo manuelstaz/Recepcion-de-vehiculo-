@@ -1,37 +1,84 @@
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  let grabadora;
-  function grabarVozCliente() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      grabadora = new MediaRecorder(stream);
-      let chunks = [];
-      grabadora.ondataavailable = e => chunks.push(e.data);
-      grabadora.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const audioURL = URL.createObjectURL(blob);
-        const audio = document.getElementById('audioGrabado');
-        audio.src = audioURL;
-        audio.style.display = 'block';
-      };
-      grabadora.start();
-      setTimeout(() => grabadora.stop(), 5000);
-    });
-  }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prueba de Firma Digital</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+    }
+    canvas {
+      width: 100%;
+      height: 200px;
+      border: 1px solid #333;
+    }
+    #firmaModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #firmaExpandida {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="formContainer">
+    <h2>Firma de aceptación</h2>
+    <p><strong>Texto legal:</strong></p>
+    <p>"ACEPTO LA REPARACIÓN DEL VEHÍCULO Y LAS CONDICIONES GENERALES DEL CONTRATO DE ADHESIÓN."</p>
+    <button onclick="grabarVozCliente()">🎙️ Grabar voz</button>
+    <audio id="audioGrabado" controls style="display:none;"></audio>
 
-  const canvasFirma = document.getElementById("firmaCliente");
-  if (canvasFirma) {
+    <h3>✍️ Firma aquí:</h3>
+    <canvas id="firmaCliente" onclick="expandirFirma()"></canvas>
+
+    <button onclick="generarPDF()">Guardar como PDF</button>
+  </div>
+
+  <div id="firmaModal">
+    <div id="firmaExpandida">
+      <p>Firma en pantalla completa:</p>
+      <canvas id="firmaExpandidaCanvas" width="500" height="300"></canvas>
+      <br />
+      <button onclick="cerrarFirma()">Regresar</button>
+      <button onclick="borrarFirmaExpandida()">Borrar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const canvasFirma = document.getElementById("firmaCliente");
     const ctxFirma = canvasFirma.getContext("2d");
     let dibujando = false;
 
     canvasFirma.addEventListener("mousedown", () => dibujando = true);
     canvasFirma.addEventListener("mouseup", () => { dibujando = false; ctxFirma.beginPath(); });
-    canvasFirma.addEventListener("mouseout", () => dibujando = false);
-    canvasFirma.addEventListener("mousemove", function (e) {
+    canvasFirma.addEventListener("mousemove", (e) => {
       if (!dibujando) return;
       const rect = canvasFirma.getBoundingClientRect();
-      ctxFirma.lineWidth = 2;
-      ctxFirma.lineCap = "round";
-      ctxFirma.strokeStyle = "#000";
       ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
       ctxFirma.stroke();
       ctxFirma.beginPath();
@@ -39,51 +86,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     window.expandirFirma = function () {
-      document.body.style.overflow = "hidden";
       document.getElementById("firmaModal").style.display = "flex";
       const canvas = document.getElementById("firmaExpandidaCanvas");
       const ctx = canvas.getContext("2d");
       let dibujando = false;
 
-      canvas.addEventListener("mousedown", () => dibujando = true);
-      canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
-      canvas.addEventListener("mouseout", () => dibujando = false);
-      canvas.addEventListener("mousemove", function (e) {
-        if (!dibujando) return;
-        const rect = canvas.getBoundingClientRect();
-        ctx.lineWidth = 2;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "#000";
-        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-      });
-
-      canvas.addEventListener("touchstart", (e) => {
-        dibujando = true;
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        ctx.beginPath();
-        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-      });
-
-      canvas.addEventListener("touchend", () => {
-        dibujando = false;
-        ctx.beginPath();
-      });
-
-      canvas.addEventListener("touchcancel", () => {
-        dibujando = false;
-      });
-
+      canvas.addEventListener("touchstart", () => dibujando = true);
+      canvas.addEventListener("touchend", () => { dibujando = false; ctx.beginPath(); });
       canvas.addEventListener("touchmove", function (e) {
         if (!dibujando) return;
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches[0];
-        ctx.lineWidth = 2;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "#000";
         ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
         ctx.stroke();
         ctx.beginPath();
@@ -92,40 +105,52 @@ document.addEventListener("DOMContentLoaded", function () {
       }, { passive: false });
 
       window.cerrarFirma = function () {
-        const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
-        const firma = canvasExpandido.toDataURL();
+        const data = canvas.toDataURL();
         const img = new Image();
         img.onload = function () {
           ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
           ctxFirma.drawImage(img, 0, 0, canvasFirma.width, canvasFirma.height);
         };
-        img.src = firma;
+        img.src = data;
         document.getElementById("firmaModal").style.display = "none";
-        document.body.style.overflow = "auto";
       }
 
       window.borrarFirmaExpandida = function () {
-        const canvas = document.getElementById("firmaExpandidaCanvas");
-        const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
     }
-  }
 
-  window.generarPDF = async function () {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const container = document.getElementById("formContainer");
+    window.grabarVozCliente = function () {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        const grabadora = new MediaRecorder(stream);
+        let chunks = [];
+        grabadora.ondataavailable = e => chunks.push(e.data);
+        grabadora.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const audioURL = URL.createObjectURL(blob);
+          const audio = document.getElementById('audioGrabado');
+          audio.src = audioURL;
+          audio.style.display = 'block';
+        };
+        grabadora.start();
+        setTimeout(() => grabadora.stop(), 5000);
+      });
+    }
 
-    await html2canvas(container).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const imgProps = doc.getImageProperties(imgData);
-      const pdfWidth = doc.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      doc.text("Incluye grabación de voz de aceptación del cliente.", 10, pdfHeight + 10);
-      doc.save('recepcion-vehiculo.pdf');
-    });
-  }
-});
-</script>
+    window.generarPDF = async function () {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const container = document.getElementById("formContainer");
+
+      await html2canvas(container).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.save("recepcion-firma.pdf");
+      });
+    }
+  });
+  </script>
+</body>
+</html>
