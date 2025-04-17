@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recepción de Vehículo - Taller</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    .section-title {
+      background-color: #003366;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 200px;
+    }
+    .btn-primary {
+      background-color: #003366;
+      border: none;
+    }
+    .firma-section {
+      margin-top: 30px;
+    }
+    .firma-texto {
+      font-weight: bold;
+      padding: 10px;
+      background: #eef;
+      border-left: 4px solid #003366;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="formContainer">
+    <h4 class="section-title">Verificación de Firma y Voz</h4>
+
+    <div class="firma-section">
+      <div class="firma-texto">
+        El cliente deberá leer en voz alta la siguiente declaración:
+        <br><br>
+        <em>“ACEPTO LA REPARACIÓN DEL VEHÍCULO Y LAS CONDICIONES GENERALES DEL CONTRATO DE ADHESIÓN.”</em>
+      </div>
+      <p>🎙️ Presione el botón para grabar la voz del cliente mientras lee el texto:</p>
+      <button class="btn btn-outline-secondary mb-2" onclick="grabarVozCliente()">🎙️ Grabar voz</button>
+      <audio id="audioGrabado" controls style="display:none;"></audio>
+
+      <div class="mt-4">
+        <label>✍️ Firma en pantalla del cliente:</label>
+        <canvas id="firmaCliente"></canvas>
+      </div>
+
+      <div class="mt-3">
+        <p><strong>Alternativa:</strong> Si el dispositivo lo permite, el cliente puede validar con su huella digital del <strong>dedo índice derecho</strong>.</p>
+        <button class="btn btn-outline-primary" onclick="validarHuella()">🔒 Validar con huella</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary mt-4" onclick="generarPDF()">Generar PDF de Recepción</button>
+  </div>
+
+  <script>
+    let grabadora;
+    function grabarVozCliente() {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        grabadora = new MediaRecorder(stream);
+        let chunks = [];
+        grabadora.ondataavailable = e => chunks.push(e.data);
+        grabadora.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const audioURL = URL.createObjectURL(blob);
+          const audio = document.getElementById('audioGrabado');
+          audio.src = audioURL;
+          audio.style.display = 'block';
+        };
+        grabadora.start();
+        setTimeout(() => grabadora.stop(), 5000);
+      });
+    }
+
+    const canvasFirma = document.getElementById("firmaCliente");
+    const ctxFirma = canvasFirma.getContext("2d");
+    let dibujando = false;
+
+    canvasFirma.addEventListener("mousedown", () => dibujando = true);
+    canvasFirma.addEventListener("mouseup", () => {
+      dibujando = false;
+      ctxFirma.beginPath();
+    });
+    canvasFirma.addEventListener("mouseout", () => dibujando = false);
+    canvasFirma.addEventListener("mousemove", function (e) {
+      if (!dibujando) return;
+      const rect = canvasFirma.getBoundingClientRect();
+      ctxFirma.lineWidth = 2;
+      ctxFirma.lineCap = "round";
+      ctxFirma.strokeStyle = "#000";
+      ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctxFirma.stroke();
+      ctxFirma.beginPath();
+      ctxFirma.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    function validarHuella() {
+      if (!window.PublicKeyCredential) {
+        alert("Este dispositivo no es compatible con autenticación por huella digital.");
+        return;
+      }
+      alert("Coloque su dedo índice derecho en el lector de huellas (si está disponible).");
+      // Aquí se puede integrar WebAuthn para validación real si se trabaja en entorno HTTPS
+    }
+
+    async function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const container = document.getElementById("formContainer");
+
+      await html2canvas(container).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.text("Incluye grabación de voz de aceptación del cliente.", 10, pdfHeight + 10);
+        doc.save('recepcion-vehiculo.pdf');
+      });
+    }
+  </script>
+</body>
+</html>
