@@ -19,98 +19,100 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const canvasFirma = document.getElementById("firmaCliente");
-  const ctxFirma = canvasFirma.getContext("2d");
-  let dibujando = false;
-
-  canvasFirma.addEventListener("mousedown", () => dibujando = true);
-  canvasFirma.addEventListener("mouseup", () => { dibujando = false; ctxFirma.beginPath(); });
-  canvasFirma.addEventListener("mouseout", () => dibujando = false);
-  canvasFirma.addEventListener("mousemove", function (e) {
-    if (!dibujando) return;
-    const rect = canvasFirma.getBoundingClientRect();
-    ctxFirma.lineWidth = 2;
-    ctxFirma.lineCap = "round";
-    ctxFirma.strokeStyle = "#000";
-    ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctxFirma.stroke();
-    ctxFirma.beginPath();
-    ctxFirma.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-  });
-
-  function expandirFirma() {
-    document.body.style.overflow = "hidden";
-    document.getElementById("firmaModal").style.display = "flex";
-    const canvas = document.getElementById("firmaExpandidaCanvas");
-    const ctx = canvas.getContext("2d");
+  if (canvasFirma) {
+    const ctxFirma = canvasFirma.getContext("2d");
     let dibujando = false;
 
-    canvas.addEventListener("mousedown", () => dibujando = true);
-    canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
-    canvas.addEventListener("mouseout", () => dibujando = false);
-    canvas.addEventListener("mousemove", function (e) {
+    canvasFirma.addEventListener("mousedown", () => dibujando = true);
+    canvasFirma.addEventListener("mouseup", () => { dibujando = false; ctxFirma.beginPath(); });
+    canvasFirma.addEventListener("mouseout", () => dibujando = false);
+    canvasFirma.addEventListener("mousemove", function (e) {
       if (!dibujando) return;
-      const rect = canvas.getBoundingClientRect();
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = "#000";
-      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      const rect = canvasFirma.getBoundingClientRect();
+      ctxFirma.lineWidth = 2;
+      ctxFirma.lineCap = "round";
+      ctxFirma.strokeStyle = "#000";
+      ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctxFirma.stroke();
+      ctxFirma.beginPath();
+      ctxFirma.moveTo(e.clientX - rect.left, e.clientY - rect.top);
     });
 
-    canvas.addEventListener("touchstart", (e) => {
-      dibujando = true;
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      ctx.beginPath();
-      ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-    });
+    window.expandirFirma = function () {
+      document.body.style.overflow = "hidden";
+      document.getElementById("firmaModal").style.display = "flex";
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      const ctx = canvas.getContext("2d");
+      let dibujando = false;
 
-    canvas.addEventListener("touchend", () => {
-      dibujando = false;
-      ctx.beginPath();
-    });
+      canvas.addEventListener("mousedown", () => dibujando = true);
+      canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
+      canvas.addEventListener("mouseout", () => dibujando = false);
+      canvas.addEventListener("mousemove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      });
 
-    canvas.addEventListener("touchcancel", () => {
-      dibujando = false;
-    });
+      canvas.addEventListener("touchstart", (e) => {
+        dibujando = true;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      });
 
-    canvas.addEventListener("touchmove", function (e) {
-      if (!dibujando) return;
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = "#000";
-      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-      e.preventDefault();
-    }, { passive: false });
+      canvas.addEventListener("touchend", () => {
+        dibujando = false;
+        ctx.beginPath();
+      });
+
+      canvas.addEventListener("touchcancel", () => {
+        dibujando = false;
+      });
+
+      canvas.addEventListener("touchmove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+        ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        e.preventDefault();
+      }, { passive: false });
+
+      window.cerrarFirma = function () {
+        const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
+        const firma = canvasExpandido.toDataURL();
+        const img = new Image();
+        img.onload = function () {
+          ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+          ctxFirma.drawImage(img, 0, 0, canvasFirma.width, canvasFirma.height);
+        };
+        img.src = firma;
+        document.getElementById("firmaModal").style.display = "none";
+        document.body.style.overflow = "auto";
+      }
+
+      window.borrarFirmaExpandida = function () {
+        const canvas = document.getElementById("firmaExpandidaCanvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
   }
 
-  function cerrarFirma() {
-    const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
-    const firma = canvasExpandido.toDataURL();
-    const img = new Image();
-    img.onload = function () {
-      ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-      ctxFirma.drawImage(img, 0, 0, canvasFirma.width, canvasFirma.height);
-    };
-    img.src = firma;
-    document.getElementById("firmaModal").style.display = "none";
-    document.body.style.overflow = "auto";
-  }
-
-  function borrarFirmaExpandida() {
-    const canvas = document.getElementById("firmaExpandidaCanvas");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  async function generarPDF() {
+  window.generarPDF = async function () {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const container = document.getElementById("formContainer");
