@@ -137,23 +137,40 @@
 
     function expandirFirma() {
       document.getElementById("firmaModal").style.display = "flex";
-      const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
-      const ctxExpandido = canvasExpandido.getContext("2d");
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      const ctx = canvas.getContext("2d");
       let dibujando = false;
-      canvasExpandido.addEventListener("mousedown", () => dibujando = true);
-      canvasExpandido.addEventListener("mouseup", () => { dibujando = false; ctxExpandido.beginPath(); });
-      canvasExpandido.addEventListener("mouseout", () => dibujando = false);
-      canvasExpandido.addEventListener("mousemove", function (e) {
+
+      canvas.addEventListener("mousedown", () => dibujando = true);
+      canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
+      canvas.addEventListener("mouseout", () => dibujando = false);
+      canvas.addEventListener("mousemove", function (e) {
         if (!dibujando) return;
-        const rect = canvasExpandido.getBoundingClientRect();
-        ctxExpandido.lineWidth = 2;
-        ctxExpandido.lineCap = "round";
-        ctxExpandido.strokeStyle = "#000";
-        ctxExpandido.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-        ctxExpandido.stroke();
-        ctxExpandido.beginPath();
-        ctxExpandido.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
       });
+
+      canvas.addEventListener("touchstart", () => dibujando = true);
+      canvas.addEventListener("touchend", () => { dibujando = false; ctx.beginPath(); });
+      canvas.addEventListener("touchcancel", () => dibujando = false);
+      canvas.addEventListener("touchmove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+        ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      }, { passive: false });
     }
 
     function cerrarFirma() {
