@@ -93,7 +93,10 @@
     <div id="firmaExpandida">
       <p><strong>Firme en pantalla completa y luego presione regresar.</strong></p>
       <canvas id="firmaExpandidaCanvas" width="500" height="300" style="border:1px solid #000;"></canvas>
-      <button class="btn btn-danger mt-2" onclick="cerrarFirma()">🔙 Regresar</button>
+      <div class="d-flex justify-content-between mt-2">
+        <button class="btn btn-danger" onclick="cerrarFirma()">🔙 Regresar</button>
+        <button class="btn btn-warning" onclick="borrarFirmaExpandida()">🧹 Borrar Firma</button>
+      </div>
     </div>
   </div>
 
@@ -136,6 +139,7 @@
     });
 
     function expandirFirma() {
+      document.body.style.overflow = "hidden";
       document.getElementById("firmaModal").style.display = "flex";
       const canvas = document.getElementById("firmaExpandidaCanvas");
       const ctx = canvas.getContext("2d");
@@ -170,6 +174,7 @@
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        e.preventDefault();
       }, { passive: false });
     }
 
@@ -183,6 +188,13 @@
       };
       img.src = firma;
       document.getElementById("firmaModal").style.display = "none";
+      document.body.style.overflow = "auto";
+    }
+
+    function borrarFirmaExpandida() {
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     async function generarPDF() {
