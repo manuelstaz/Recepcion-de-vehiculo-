@@ -192,16 +192,19 @@
     }
 
     function generarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const container = document.getElementById("formContainer");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const container = document.getElementById("formContainer");
 
-      html2canvas(container).then(canvas => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdfWidth = doc.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        doc.save("firma-recepcion.pdf");
+  html2canvas(container, {
+    scale: 2, // mejor resolución
+    useCORS: true
+  }).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    doc.save("firma-recepcion.pdf");
       });
     }
 
