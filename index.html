@@ -51,15 +51,10 @@
     <p><strong>Texto Legal:</strong></p>
     <p>"ACEPTO LA REPARACIÓN DEL VEHÍCULO Y LAS CONDICIONES GENERALES DEL CONTRATO DE ADHESIÓN."</p>
     <button class="btn btn-secondary mb-3" onclick="grabarVozCliente()">🎙️ Grabar Voz</button>
-<div id="grabandoMsg" style="display:none; color: red; font-weight: bold;">🎙 Grabando... presiona detener</div>
-<button id="btnDetenerGrabacion" onclick="detenerGrabacion()" class="btn btn-danger mt-2" style="display:none;">🛑 Detener Grabación</button>
-<button id="btnBorrarGrabacion" onclick="borrarGrabacion()" class="btn btn-warning mt-2" style="display:none;">🗑️ Borrar Grabación</button>
-    <audio id="audioGrabado" controls style="display:none;"></audio>
-<div id="grabandoMsg" style="display:none; color: red; font-weight: bold;">🎙 Grabando... presiona detener</div>
-<button id="btnDetenerGrabacion" onclick="detenerGrabacion()" style="display:none;" class="btn btn-danger mt-2">🛑 Detener Grabación</button>
-<button id="btnBorrarGrabacion" onclick="borrarGrabacion()" style="display:none;" class="btn btn-warning mt-2">🗑️ Borrar Grabación</button>
     <div id="grabandoMsg" style="display:none; color: red; font-weight: bold;">🎙 Grabando... presiona detener</div>
-    <button id="btnDetenerGrabacion" onclick="detenerGrabacion()" style="display:none;" class="btn btn-danger mt-2">🛑 Detener Grabación</button>
+    <button id="btnDetenerGrabacion" onclick="detenerGrabacion()" class="btn btn-danger mt-2" style="display:none;">🛑 Detener Grabación</button>
+    <button id="btnBorrarGrabacion" onclick="borrarGrabacion()" class="btn btn-warning mt-2" style="display:none;">🗑️ Borrar Grabación</button>
+    <audio id="audioGrabado" controls style="display:none;"></audio>
 
     <p><strong>✍️ Firma aquí:</strong></p>
     <canvas id="firmaCliente" onclick="expandirFirma()"></canvas>
@@ -76,167 +71,162 @@
     </div>
   </div>
 
-<script>
-let grabadora, chunks = [];
+  <script>
+    let grabadora, chunks = [];
 
-function grabarVozCliente() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert('Este navegador no permite el uso del micrófono.');
-    return;
-  }
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    grabadora = new MediaRecorder(stream);
-    chunks = [];
-    grabadora.ondataavailable = e => chunks.push(e.data);
-    grabadora.onstop = () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' });
-      const audioURL = URL.createObjectURL(blob);
-      const audio = document.getElementById('audioGrabado');
-      audio.src = audioURL;
-      audio.style.display = 'block';
-      document.getElementById('grabandoMsg').style.display = 'none';
-      document.getElementById('btnDetenerGrabacion').style.display = 'none';
-      document.getElementById('btnBorrarGrabacion').style.display = 'inline-block';
-    };
-    grabadora.start();
-    document.getElementById('grabandoMsg').style.display = 'block';
-    document.getElementById('btnDetenerGrabacion').style.display = 'inline-block';
-    document.getElementById('btnBorrarGrabacion').style.display = 'none';
-  }).catch(err => {
-    alert('Error al acceder al micrófono: ' + err.message);
-  });
-    document.getElementById('grabandoMsg').style.display = 'block';
-    document.getElementById('btnDetenerGrabacion').style.display = 'inline-block';
-  }).catch(err => {
-    alert('Error al acceder al micrófono: ' + err.message);
-  });
-}
-
-function detenerGrabacion() {
-  if (grabadora && grabadora.state === "recording") {
-    grabadora.stop();
-  }
-}
-}
-
-function expandirFirma() {
-  document.body.style.overflow = "hidden";
-  document.getElementById("firmaModal").style.display = "flex";
-
-  const canvas = document.getElementById("firmaExpandidaCanvas");
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
-  const ctx = canvas.getContext("2d");
-  let dibujando = false;
-
-  canvas.addEventListener("mousedown", () => dibujando = true);
-  canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
-  canvas.addEventListener("mousemove", function (e) {
-    if (!dibujando) return;
-    const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-  });
-
-  canvas.addEventListener("touchstart", (e) => {
-    dibujando = true;
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const scaleX = canvas.width / canvas.clientWidth;
-    const scaleY = canvas.height / canvas.clientHeight;
-    const x = (touch.clientX - rect.left) * scaleX;
-    const y = (touch.clientY - rect.top) * scaleY;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  });
-
-  canvas.addEventListener("touchend", () => {
-    dibujando = false;
-    ctx.beginPath();
-  });
-
-  canvas.addEventListener("touchmove", function (e) {
-    if (!dibujando) return;
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const scaleX = canvas.width / canvas.clientWidth;
-    const scaleY = canvas.height / canvas.clientHeight;
-    const x = (touch.clientX - rect.left) * scaleX;
-    const y = (touch.clientY - rect.top) * scaleY;
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    e.preventDefault();
-  }, { passive: false });
-}
-
-function cerrarFirma() {
-  const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
-  const firma = canvasExpandido.toDataURL();
-  const img = new Image();
-  img.onload = function () {
-    const ctxFirma = document.getElementById("firmaCliente").getContext("2d");
-    ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-    ctxFirma.drawImage(img, 0, 0, canvasFirma.width, canvasFirma.height);
-  };
-  img.src = firma;
-  document.getElementById("firmaModal").style.display = "none";
-  document.body.style.overflow = "auto";
-}
-
-function borrarFirmaExpandida() {
-  const canvas = document.getElementById("firmaExpandidaCanvas");
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  const canvasFirma = document.getElementById("firmaCliente");
-  if (canvasFirma) {
-    if (canvasFirma.clientWidth > 0) {
-      canvasFirma.width = canvasFirma.clientWidth;
-      canvasFirma.height = canvasFirma.clientHeight;
+    function grabarVozCliente() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Este navegador no permite el uso del micrófono.');
+        return;
+      }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        grabadora = new MediaRecorder(stream);
+        chunks = [];
+        grabadora.ondataavailable = e => chunks.push(e.data);
+        grabadora.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const audioURL = URL.createObjectURL(blob);
+          const audio = document.getElementById('audioGrabado');
+          audio.src = audioURL;
+          audio.style.display = 'block';
+          document.getElementById('grabandoMsg').style.display = 'none';
+          document.getElementById('btnDetenerGrabacion').style.display = 'none';
+          document.getElementById('btnBorrarGrabacion').style.display = 'inline-block';
+        };
+        grabadora.start();
+        document.getElementById('grabandoMsg').style.display = 'block';
+        document.getElementById('btnDetenerGrabacion').style.display = 'inline-block';
+        document.getElementById('btnBorrarGrabacion').style.display = 'none';
+      }).catch(err => {
+        alert('Error al acceder al micrófono: ' + err.message);
+      });
     }
-    const ctxFirma = canvasFirma.getContext("2d");
-    let dibujando = false;
 
-    canvasFirma.addEventListener("mousedown", () => dibujando = true);
-    canvasFirma.addEventListener("mouseup", () => { dibujando = false; ctxFirma.beginPath(); });
-    canvasFirma.addEventListener("mousemove", function (e) {
-      if (!dibujando) return;
-      const rect = canvasFirma.getBoundingClientRect();
-      ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-      ctxFirma.stroke();
-      ctxFirma.beginPath();
-      ctxFirma.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    function detenerGrabacion() {
+      if (grabadora && grabadora.state === "recording") {
+        grabadora.stop();
+      }
+    }
+
+    function borrarGrabacion() {
+      const audio = document.getElementById('audioGrabado');
+      audio.src = '';
+      audio.style.display = 'none';
+      document.getElementById('btnBorrarGrabacion').style.display = 'none';
+    }
+
+    function expandirFirma() {
+      document.body.style.overflow = "hidden";
+      document.getElementById("firmaModal").style.display = "flex";
+
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      const ctx = canvas.getContext("2d");
+      let dibujando = false;
+
+      canvas.addEventListener("mousedown", () => dibujando = true);
+      canvas.addEventListener("mouseup", () => { dibujando = false; ctx.beginPath(); });
+      canvas.addEventListener("mousemove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      });
+
+      canvas.addEventListener("touchstart", (e) => {
+        dibujando = true;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        const scaleX = canvas.width / canvas.clientWidth;
+        const scaleY = canvas.height / canvas.clientHeight;
+        const x = (touch.clientX - rect.left) * scaleX;
+        const y = (touch.clientY - rect.top) * scaleY;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      });
+
+      canvas.addEventListener("touchend", () => {
+        dibujando = false;
+        ctx.beginPath();
+      });
+
+      canvas.addEventListener("touchmove", function (e) {
+        if (!dibujando) return;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        const scaleX = canvas.width / canvas.clientWidth;
+        const scaleY = canvas.height / canvas.clientHeight;
+        const x = (touch.clientX - rect.left) * scaleX;
+        const y = (touch.clientY - rect.top) * scaleY;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        e.preventDefault();
+      }, { passive: false });
+    }
+
+    function cerrarFirma() {
+      const canvasExpandido = document.getElementById("firmaExpandidaCanvas");
+      const firma = canvasExpandido.toDataURL();
+      const img = new Image();
+      img.onload = function () {
+        const canvasFirma = document.getElementById("firmaCliente");
+        const ctxFirma = canvasFirma.getContext("2d");
+        ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+        ctxFirma.drawImage(img, 0, 0, canvasFirma.width, canvasFirma.height);
+      };
+      img.src = firma;
+      document.getElementById("firmaModal").style.display = "none";
+      document.body.style.overflow = "auto";
+    }
+
+    function borrarFirmaExpandida() {
+      const canvas = document.getElementById("firmaExpandidaCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+    }
+
+    function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const container = document.getElementById("formContainer");
+
+      html2canvas(container).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.save("firma-recepcion.pdf");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const canvasFirma = document.getElementById("firmaCliente");
+      if (canvasFirma && canvasFirma.clientWidth > 0) {
+        const ratio = window.devicePixelRatio || 1;
+        canvasFirma.width = canvasFirma.clientWidth * ratio;
+        canvasFirma.height = canvasFirma.clientHeight * ratio;
+        const ctxFirma = canvasFirma.getContext("2d");
+        ctxFirma.scale(ratio, ratio);
+
+        let dibujando = false;
+        canvasFirma.addEventListener("mousedown", () => dibujando = true);
+        canvasFirma.addEventListener("mouseup", () => { dibujando = false; ctxFirma.beginPath(); });
+        canvasFirma.addEventListener("mousemove", function (e) {
+          if (!dibujando) return;
+          const rect = canvasFirma.getBoundingClientRect();
+          ctxFirma.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+          ctxFirma.stroke();
+          ctxFirma.beginPath();
+          ctxFirma.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        });
+      }
     });
-  }
-});
-
-function borrarGrabacion() {
-  const audio = document.getElementById('audioGrabado');
-  audio.src = '';
-  audio.style.display = 'none';
-  document.getElementById('btnBorrarGrabacion').style.display = 'none';
-}
-
-function generarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const container = document.getElementById("formContainer");
-
-  html2canvas(container).then(canvas => {
-    const imgData = canvas.toDataURL("image/png");
-    const pdfWidth = doc.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    doc.save("firma-recepcion.pdf");
-  });
-}
-</script>
+  </script>
 </body>
 </html>
