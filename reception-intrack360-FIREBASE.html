@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recepción Intrack360</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBJYNTP1IopR4bQo5q8D9mBGfp-CP3wPEc",
+      authDomain: "intrack360.firebaseapp.com",
+      projectId: "intrack360",
+      storageBucket: "intrack360.appspot.com",
+      messagingSenderId: "506102748165",
+      appId: "1:506102748165:web:05b23e79ff04806881b86c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.guardarRecepcion = async function () {
+      const nombre = document.getElementById("nombreCliente").value;
+      const telefono = document.getElementById("telefonoCliente").value;
+      const poblacion = document.getElementById("poblacionCliente").value;
+      const placas = document.getElementById("placasVehiculo").value;
+      const observaciones = document.getElementById("observaciones").value;
+
+      try {
+        const docRef = await addDoc(collection(db, "talleres", "TAL001", "recepciones"), {
+          cliente: {
+            nombre: nombre,
+            telefono: telefono,
+            poblacion: poblacion
+          },
+          vehiculo: {
+            placas: placas,
+            observaciones: observaciones
+          },
+          timestamp: serverTimestamp()
+        });
+        alert("✅ Recepción guardada correctamente con folio automático.");
+      } catch (e) {
+        alert("❌ Error al guardar: " + e.message);
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #222;
+      border: 3px solid #d32f2f;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    h1 {
+      color: #d32f2f;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      background-color: #333;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      padding: 12px;
+      margin-top: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Recepción Intrack360</h1>
+
+    <label>Nombre del cliente</label>
+    <input type="text" id="nombreCliente" placeholder="Ej. Juan Pérez">
+
+    <label>Teléfono</label>
+    <input type="tel" id="telefonoCliente" placeholder="Ej. 3111234567">
+
+    <label>Población</label>
+    <input type="text" id="poblacionCliente" placeholder="Ej. Zacualpan">
+
+    <label>Placas del vehículo</label>
+    <input type="text" id="placasVehiculo" placeholder="Ej. XYZ1234">
+
+    <label>Observaciones</label>
+    <textarea id="observaciones" rows="4" placeholder="Ej. Vehículo llega en grúa, sin revisar..."></textarea>
+
+    <button onclick="guardarRecepcion()">Guardar recepción</button>
+  </div>
+</body>
+</html>
