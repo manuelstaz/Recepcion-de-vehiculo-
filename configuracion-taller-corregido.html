@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Configuración del Taller - Intrack360</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #111; color: #fff; padding: 20px; }
+    .container { max-width: 720px; margin: auto; background: #222; padding: 20px; border: 3px solid #d32f2f; border-radius: 8px; }
+    h1 { text-align: center; color: #d32f2f; }
+    label { display: block; margin-top: 15px; }
+    input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; background-color: #333; border: 1px solid #555; color: #fff; }
+    .checkbox-group { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-item { display: flex; align-items: flex-start; gap: 10px; }
+    .checkbox-item input[type="checkbox"] { margin-top: 4px; }
+    .password-container { position: relative; }
+    .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #ccc; }
+    button { background-color: #d32f2f; color: white; border: none; padding: 12px 20px; margin-top: 20px; cursor: pointer; width: 100%; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Configuración del Taller</h1>
+
+    <label>Contraseña de administrador</label>
+    <div class="password-container">
+      <input type="password" id="adminPass" placeholder="••••••••">
+      <span class="toggle-password" onclick="togglePassword()">👁️</span>
+    </div>
+
+    <label>Nombre del taller</label>
+    <input type="text" id="nombreTaller">
+
+    <label>Dirección</label>
+    <input type="text" id="direccionTaller">
+
+    <label>Teléfono</label>
+    <input type="text" id="telefonoTaller">
+
+    <label>Logo del taller</label>
+    <input type="file" id="logoTaller" accept="image/*">
+
+    <label>Cláusulas legales (activar/desactivar)</label>
+    <div class="checkbox-group">
+      <div class="checkbox-item">
+        <input type="checkbox" checked>
+        <span>El taller no se hace responsable por elementos no declarados al momento de ingreso.</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked>
+        <span>En caso de que no sea aceptado el presupuesto, el cliente deberá pagar revisión y diagnóstico.</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked>
+        <span>Después de 24 hrs de avisado, pensión diaria de $50.00 por abandono.</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked>
+        <span>No responsable de daños meteorológicos, vandalismo o cualquier causa natural.</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked>
+        <span>No responsable de piezas de plástico deterioradas en el motor.</span>
+      </div>
+    </div>
+
+    <label>Cláusulas adicionales (personalizadas)</label>
+    <textarea id="clausulasExtras" rows="4" placeholder="Ej. El cliente acepta..."></textarea>
+
+    <label>¿Mostrar ubicación en Google Maps al cliente?</label>
+    <select id="ubicacionActiva">
+      <option value="si">Sí</option>
+      <option value="no">No</option>
+    </select>
+
+    <button onclick="alert('Simulación de guardado en Firebase')">Guardar configuración</button>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const input = document.getElementById("adminPass");
+      input.type = input.type === "password" ? "text" : "password";
+    }
+  </script>
+</body>
+</html>
